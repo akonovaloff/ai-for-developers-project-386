@@ -1,7 +1,8 @@
 .PHONY: install install-backend install-frontend \
         dev-backend dev-frontend \
         test test-backend test-e2e test-integration \
-        build
+        build \
+        docker-build docker-run
 
 NODE = bash -c "source ~/.nvm/nvm.sh 2>/dev/null; $$*" --
 
@@ -40,3 +41,11 @@ test-integration:
 
 build:
 	$(NODE) npm run build --prefix frontend
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+
+docker-build:
+	docker build -t calbook .
+
+docker-run:
+	docker run --rm -p 8000:8000 -e PORT=8000 calbook
