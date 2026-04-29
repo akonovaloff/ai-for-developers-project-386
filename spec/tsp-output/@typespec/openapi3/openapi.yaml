@@ -1,0 +1,388 @@
+openapi: 3.0.0
+info:
+  title: CalBook — Booking Service API
+  version: 0.0.0
+tags: []
+paths:
+  /admin/bookings:
+    get:
+      operationId: AdminApi_listBookings
+      description: |-
+        Список бронирований.
+        from/to — фильтр по дате (ISO YYYY-MM-DD).
+        По умолчанию возвращает предстоящие бронирования.
+      parameters:
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          explode: false
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+  /admin/bookings/{id}:
+    delete:
+      operationId: AdminApi_cancelBooking
+      description: Отменить бронирование
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: There is no content to send for this request, but the headers may be useful.
+        '404':
+          description: The server cannot find the requested resource.
+  /admin/event-types:
+    get:
+      operationId: AdminApi_listEventTypes
+      description: Список всех типов событий
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+    post:
+      operationId: AdminApi_createEventType
+      description: Создать новый тип события
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeInput'
+  /admin/event-types/{id}:
+    put:
+      operationId: AdminApi_updateEventType
+      description: Обновить тип события
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '404':
+          description: The server cannot find the requested resource.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeInput'
+    delete:
+      operationId: AdminApi_deleteEventType
+      description: Удалить тип события
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: There is no content to send for this request, but the headers may be useful.
+        '404':
+          description: The server cannot find the requested resource.
+  /api/bookings:
+    post:
+      operationId: GuestApi_createBooking
+      description: |-
+        Создать бронирование.
+        409 Conflict — слот уже занят.
+        400 Bad Request — невалидные данные (прошедшее время, за пределами 14 дней).
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingInput'
+  /api/bookings/{id}:
+    get:
+      operationId: GuestApi_getBooking
+      description: Получить бронирование по ID (страница подтверждения)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: The server cannot find the requested resource.
+  /api/event-types:
+    get:
+      operationId: GuestApi_listEventTypes
+      description: Список всех типов событий
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+  /api/event-types/{id}:
+    get:
+      operationId: GuestApi_getEventType
+      description: Один тип события по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '404':
+          description: The server cannot find the requested resource.
+  /api/event-types/{id}/slots:
+    get:
+      operationId: GuestApi_getAvailableSlots
+      description: |-
+        Свободные слоты для типа события.
+        startDate — начало 14-дневного окна (по умолчанию сегодня).
+        Слот занят, если существует бронирование с тем же startTime
+        вне зависимости от типа события.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeSlot'
+        '404':
+          description: The server cannot find the requested resource.
+  /api/profile:
+    get:
+      operationId: GuestApi_getProfile
+      description: Профиль владельца
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerProfile'
+        '404':
+          description: The server cannot find the requested resource.
+components:
+  schemas:
+    ApiError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+    Booking:
+      type: object
+      required:
+        - id
+        - eventTypeId
+        - eventTypeName
+        - durationMinutes
+        - startTime
+        - endTime
+        - guestName
+        - guestEmail
+        - createdAt
+      properties:
+        id:
+          type: string
+        eventTypeId:
+          type: string
+        eventTypeName:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      description: Подтверждённое бронирование
+    BookingInput:
+      type: object
+      required:
+        - eventTypeId
+        - startTime
+        - guestName
+        - guestEmail
+      properties:
+        eventTypeId:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        notes:
+          type: string
+      description: Данные для создания бронирования (от гостя)
+    EventType:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - durationMinutes
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+      description: Тип события (встречи), создаётся владельцем
+    EventTypeInput:
+      type: object
+      required:
+        - name
+        - description
+        - durationMinutes
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+      description: Данные для создания/обновления типа события
+    OwnerProfile:
+      type: object
+      required:
+        - id
+        - name
+        - bio
+        - timezone
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        bio:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+        timezone:
+          type: string
+      description: Захардкоженный профиль владельца
+    TimeSlot:
+      type: object
+      required:
+        - startTime
+        - endTime
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+      description: Доступный временной слот (вычисляется сервером)
+servers:
+  - url: http://localhost:8000
+    description: Local development
+    variables: {}
