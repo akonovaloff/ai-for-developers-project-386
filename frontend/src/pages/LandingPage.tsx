@@ -1,4 +1,4 @@
-import { Alert, Container, Loader, SimpleGrid, Title } from '@mantine/core';
+import { Alert, Anchor, AppShell, Container, Flex, Loader, SimpleGrid, Title } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { listEventTypes, getProfile } from '../api/guest';
@@ -31,18 +31,28 @@ export default function LandingPage() {
   }
 
   return (
-    <Container size="sm" py="xl">
-      {profileQuery.data && <OwnerProfile profile={profileQuery.data} />}
-      <Title order={3} mb="md">Типы встреч</Title>
-      <SimpleGrid cols={1} spacing="sm">
-        {eventTypesQuery.data?.map((et) => (
-          <EventTypeCard
-            key={et.id}
-            eventType={et}
-            onClick={() => navigate(`/book/${et.id}`)}
-          />
-        ))}
-      </SimpleGrid>
-    </Container>
+    <AppShell header={{ height: 48 }}>
+      <AppShell.Header px="md">
+        <Flex h="100%" align="center" justify="flex-end">
+          <Anchor href="/admin" size="sm">Панель администратора</Anchor>
+        </Flex>
+      </AppShell.Header>
+
+      <AppShell.Main>
+        <Container size="sm" py="xl">
+          {profileQuery.data && <OwnerProfile profile={profileQuery.data} />}
+          <Title order={3} mb="md">Типы встреч</Title>
+          <SimpleGrid cols={1} spacing="sm">
+            {eventTypesQuery.data?.map((et) => (
+              <EventTypeCard
+                key={et.id}
+                eventType={et}
+                onClick={() => navigate(`/book/${et.id}`)}
+              />
+            ))}
+          </SimpleGrid>
+        </Container>
+      </AppShell.Main>
+    </AppShell>
   );
 }

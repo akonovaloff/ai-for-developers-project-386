@@ -1,5 +1,5 @@
-import { AppShell, Container, NavLink, Title } from '@mantine/core';
-import { IconCalendar, IconList } from '@tabler/icons-react';
+import { AppShell, Container, Divider, NavLink, Title } from '@mantine/core';
+import { IconCalendar, IconHome, IconList } from '@tabler/icons-react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 export default function AdminLayout() {
@@ -21,6 +21,12 @@ export default function AdminLayout() {
           leftSection={<IconCalendar size={16} />}
           active={location.pathname === '/admin/bookings'}
           onClick={() => navigate('/admin/bookings')}
+        />
+        <Divider my="sm" />
+        <NavLink
+          label="Публичный сайт"
+          leftSection={<IconHome size={16} />}
+          onClick={() => navigate('/')}
         />
       </AppShell.Navbar>
 
