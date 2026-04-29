@@ -49,8 +49,6 @@ def get_available_slots(id: str, startDate: date | None = None):
     tz = ZoneInfo(OWNER_PROFILE.timezone)
     now_utc = datetime.now(timezone.utc)
     window_end_utc = now_utc + timedelta(days=_BOOKING_WINDOW_DAYS)
-    booked = store.get_booked_start_times()
-
     start_day = startDate or now_utc.astimezone(tz).date()
     slots: list[TimeSlot] = []
 
@@ -63,7 +61,7 @@ def get_available_slots(id: str, startDate: date | None = None):
             while slot_dt + timedelta(minutes=et.durationMinutes) <= day_end:
                 slot_utc = slot_dt.astimezone(timezone.utc)
                 slot_end_utc = (slot_dt + timedelta(minutes=et.durationMinutes)).astimezone(timezone.utc)
-                if slot_utc > now_utc and slot_utc not in booked:
+                if slot_utc > now_utc and not store.has_overlap(slot_utc, slot_end_utc):
                     slots.append(TimeSlot(startTime=slot_utc, endTime=slot_end_utc))
                 slot_dt += timedelta(minutes=et.durationMinutes)
 
@@ -86,7 +84,8 @@ def create_booking(body: BookingInput):
     if start_utc > now_utc + timedelta(days=_BOOKING_WINDOW_DAYS):
         raise HTTPException(status_code=400, detail="Start time must be within 14 days")
 
-    if start_utc in store.get_booked_start_times():
+    end_utc = start_utc + timedelta(minutes=et.durationMinutes)
+    if store.has_overlap(start_utc, end_utc):
         return JSONResponse(
             status_code=409,
             content={"message": "Slot is already taken", "code": "SLOT_CONFLICT"},
@@ -98,7 +97,7 @@ def create_booking(body: BookingInput):
         eventTypeName=et.name,
         durationMinutes=et.durationMinutes,
         startTime=start_utc,
-        endTime=start_utc + timedelta(minutes=et.durationMinutes),
+        endTime=end_utc,
         guestName=body.guestName,
         guestEmail=body.guestEmail,
         notes=body.notes,

@@ -90,5 +90,5 @@ def cancel_booking(id: str) -> bool:
     return _bookings.pop(id, None) is not None
 
 
-def get_booked_start_times() -> set[datetime]:
-    return {b.startTime for b in _bookings.values()}
+def has_overlap(start: datetime, end: datetime) -> bool:
+    return any(b.startTime < end and b.endTime > start for b in _bookings.values())
