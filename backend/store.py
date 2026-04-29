@@ -28,6 +28,12 @@ def _seed() -> None:
 _seed()
 
 
+def reset() -> None:
+    _event_types.clear()
+    _bookings.clear()
+    _seed()
+
+
 # --- Event types ---
 
 def list_event_types() -> list[EventType]:
