@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from routers import admin, guest
@@ -33,4 +34,11 @@ app.include_router(admin.router)
 
 _dist = Path(__file__).parent / "frontend" / "dist"
 if _dist.exists():
-    app.mount("/", StaticFiles(directory=_dist, html=True), name="static")
+    app.mount("/assets", StaticFiles(directory=_dist / "assets"), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def spa(full_path: str):
+        candidate = (_dist / full_path).resolve()
+        if candidate.is_file() and str(candidate).startswith(str(_dist.resolve())):
+            return FileResponse(candidate)
+        return FileResponse(_dist / "index.html")
